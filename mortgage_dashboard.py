@@ -14,15 +14,21 @@ def get_30yr_mortgage_rate():
         page = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(page.content, "html.parser")
 
-        rate_div = soup.find("div", class_="value")
-        if not rate_div:
-            st.warning("⚠️ Could not find mortgage rate div on Mortgage News Daily")
+        # NEW selector: find span inside div with class="rate-display"
+        rate_container = soup.find("div", class_="rate-display")
+        if not rate_container:
+            st.warning("⚠️ Could not find div with class 'rate-display'")
             return None
 
-        rate_text = rate_div.text.strip().replace("%", "")
+        rate_span = rate_container.find("span", class_="value")
+        if not rate_span:
+            st.warning("⚠️ Could not find span with class 'value' inside rate-display")
+            return None
+
+        rate_text = rate_span.text.strip().replace("%", "")
         return float(rate_text)
     except Exception as e:
-        st.warning(f"⚠️ Error fetching mortgage rate from MND: {e}")
+        st.warning(f"⚠️ Error scraping Mortgage News Daily: {e}")
         return None
 
 def get_live_rates():
@@ -43,7 +49,7 @@ def get_live_rates():
     try:
         mortgage_rate = get_30yr_mortgage_rate()
         if mortgage_rate is None:
-            st.warning("⚠️ NerdWallet scrape failed to return a mortgage rate.")
+            st.warning("⚠️ Mortgage News scrape failed to return a mortgage rate.")
     except Exception as e:
         st.warning(f"⚠️ Error fetching mortgage rate: {e}")
         mortgage_rate = None
@@ -136,7 +142,7 @@ try:
         st.error("⚠️ Failed to retrieve the 10-Year Treasury Yield from Yahoo Finance.")
 
     if actual_mortgage_rate is None:
-        st.error("⚠️ Failed to retrieve the 30-Year Mortgage Rate from NerdWallet.")
+        st.error("⚠️ Failed to retrieve the 30-Year Mortgage Rate from Mortgage News.")
 
     # Stop if either failed
     if actual_10Y_yield is None or actual_mortgage_rate is None:

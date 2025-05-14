@@ -137,8 +137,15 @@ try:
 
     # Real-world current rates (can later pull dynamically)
     actual_10Y_yield, actual_mortgage_rate = get_live_rates()
+    # Detailed debugging
+    if actual_10Y_yield is None:
+        st.error("⚠️ Failed to retrieve the 10-Year Treasury Yield from Yahoo Finance.")
+
+    if actual_mortgage_rate is None:
+        st.error("⚠️ Failed to retrieve the 30-Year Mortgage Rate from NerdWallet.")
+
+    # Stop if either failed
     if actual_10Y_yield is None or actual_mortgage_rate is None:
-        st.warning("⚠️ Could not fetch live rate data. Investment guidance unavailable.")
         raise st.stop() 
     else:
         current_spread = round(actual_mortgage_rate - actual_10Y_yield, 2)

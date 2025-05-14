@@ -10,3 +10,5 @@ beautifulsoup4
 lxml
 kaleido
 fredapi
+pandas
+requests

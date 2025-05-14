@@ -126,7 +126,7 @@ try:
 
     # Real-world current rates (can later pull dynamically)
     actual_10Y_yield, actual_mortgage_rate = get_live_rates()
-    st.write(f"DEBUG - 10Y Yield: {actual_10Y_yield}, Mortgage Rate: {actual_mortgage_rate}")
+    #st.write(f"DEBUG - 10Y Yield: {actual_10Y_yield}, Mortgage Rate: {actual_mortgage_rate}")
     # Detailed debugging
     if actual_10Y_yield is None:
         st.error("⚠️ Failed to retrieve the 10-Year Treasury Yield from Yahoo Finance.")

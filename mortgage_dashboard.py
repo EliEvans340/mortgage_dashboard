@@ -210,7 +210,6 @@ def get_city_labor_data():
 def get_bls_county_unemployment():
     BLS_API_KEY = "a8113b3e5ce94f11917a83b94e35e702"  # 🔐 Replace with your BLS key
 
-    # BLS Series IDs (Not Seasonally Adjusted, County-Level Unemployment Rates)
     series_ids = {
         "Nassau County": "LAUCN360590000000003",
         "Suffolk County": "LAUCN361030000000003",
@@ -228,25 +227,34 @@ def get_bls_county_unemployment():
     }
 
     response = requests.post("https://api.bls.gov/publicAPI/v2/timeseries/data/", json=data, headers=headers)
+
+    # DEBUGGING BLOCK
+    if response.status_code != 200:
+        st.error(f"❌ BLS API Error: {response.status_code}")
+        st.stop()
+
     results = response.json()
 
-    # Extract and structure the data
-    records = []
+    if 'Results' not in results or 'series' not in results['Results']:
+        st.error(f"❌ Unexpected BLS response: {results}")
+        st.stop()
+
+    # Continue only if structure is valid
+    rows = []
     for i, series in enumerate(results['Results']['series']):
         county = list(series_ids.keys())[i]
-        for item in series['data']:
-            if item['period'].startswith("M"):  # Filter out annual averages
-                records.append({
+        for entry in series['data']:
+            if entry['period'].startswith("M"):  # Only monthly data
+                rows.append({
                     "County": county,
-                    "Year": item['year'],
-                    "Month": item['periodName'],
-                    "Unemployment Rate": float(item['value'])
+                    "Year": entry['year'],
+                    "Month": entry['periodName'],
+                    "Unemployment Rate": float(entry['value'])
                 })
 
-    df = pd.DataFrame(records)
+    df = pd.DataFrame(rows)
     df['Date'] = pd.to_datetime(df['Month'] + " " + df['Year'], format="%B %Y")
 
-    # Keep only the latest available month per county
     latest_month = df['Date'].max()
     latest_data = df[df['Date'] == latest_month].copy()
 

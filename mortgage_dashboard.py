@@ -3,32 +3,22 @@ import plotly.express as px
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
+from fredapi import Fred
+import os
 
 import yfinance as yf
 
 @st.cache_data(ttl=3600)  # Refresh every hour
+# Add your FRED API key (free at https://fred.stlouisfed.org/)
+os.environ["FRED_API_KEY"] = "e77ffd5020e10fd3410f3b13d83b5b68"
+fred = Fred()
+
 def get_30yr_mortgage_rate():
-    url = "https://www.mortgagenewsdaily.com/mortgage-rates/30-year-fixed"
-    headers = {"User-Agent": "Mozilla/5.0"}
     try:
-        page = requests.get(url, headers=headers, timeout=10)
-        soup = BeautifulSoup(page.content, "html.parser")
-
-        # NEW selector: find span inside div with class="rate-display"
-        rate_container = soup.find("div", class_="rate-display")
-        if not rate_container:
-            st.warning("⚠️ Could not find div with class 'rate-display'")
-            return None
-
-        rate_span = rate_container.find("span", class_="value")
-        if not rate_span:
-            st.warning("⚠️ Could not find span with class 'value' inside rate-display")
-            return None
-
-        rate_text = rate_span.text.strip().replace("%", "")
-        return float(rate_text)
+        rate = fred.get_series('MORTGAGE30US')[-1]
+        return round(rate, 2)
     except Exception as e:
-        st.warning(f"⚠️ Error scraping Mortgage News Daily: {e}")
+        st.warning(f"⚠️ Error fetching mortgage rate from FRED: {e}")
         return None
 
 def get_live_rates():
@@ -49,7 +39,7 @@ def get_live_rates():
     try:
         mortgage_rate = get_30yr_mortgage_rate()
         if mortgage_rate is None:
-            st.warning("⚠️ Mortgage News scrape failed to return a mortgage rate.")
+            st.warning("⚠️ FRED API failed to return a mortgage rate.")
     except Exception as e:
         st.warning(f"⚠️ Error fetching mortgage rate: {e}")
         mortgage_rate = None
@@ -142,7 +132,7 @@ try:
         st.error("⚠️ Failed to retrieve the 10-Year Treasury Yield from Yahoo Finance.")
 
     if actual_mortgage_rate is None:
-        st.error("⚠️ Failed to retrieve the 30-Year Mortgage Rate from Mortgage News.")
+        st.error("⚠️ Failed to retrieve the 30-Year Mortgage Rate from FRED API.")
 
     # Stop if either failed
     if actual_10Y_yield is None or actual_mortgage_rate is None:

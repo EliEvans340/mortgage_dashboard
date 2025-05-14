@@ -7,16 +7,6 @@ from bs4 import BeautifulSoup
 import yfinance as yf
 
 @st.cache_data(ttl=3600)  # Refresh every hour
-def get_live_rates():
-    try:
-        # 10-Year Treasury Yield (Yahoo: ^TNX is in basis points, divide by 100)
-        tnx = yf.Ticker("^TNX")
-        treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]
-
-    except Exception as e:
-        st.warning(f"⚠️ Error fetching live data: {e}")
-        return None, None
-
 def get_30yr_mortgage_rate():
     url = "https://www.nerdwallet.com/mortgages/mortgage-rates"
     headers = {"User-Agent": "Mozilla/5.0"}
@@ -31,13 +21,25 @@ def get_30yr_mortgage_rate():
         return float(rate_text)
     except Exception as e:
         print(f"Error fetching mortgage rate: {e}")
-        return None
+        return None, None
         
         # 30-Year Mortgage Rate — placeholder / static fallback
         # Replace with an actual API or static scrape later
         #mortgage_rate = 6.92  # You can update this manually or automate with another source
 
-        return round(treasury_yield, 2), get_30yr_mortgage_rate
+def get_live_rates():
+    try:
+        # 10-Year Treasury Yield (Yahoo: ^TNX is in basis points, divide by 100)
+        tnx = yf.Ticker("^TNX")
+        treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]
+
+        mortgage_rate = get_30yr_mortgage_rate()
+
+    except Exception as e:
+        st.warning(f"⚠️ Error fetching live data: {e}")
+        return None, None
+
+        return round(treasury_yield, 2), mortgage_rate
 
 
 # Load the data

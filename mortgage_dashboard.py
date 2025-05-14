@@ -119,7 +119,7 @@ try:
     if actual_10Y_yield is None or actual_mortgage_rate is None:
         st.warning("⚠️ Could not fetch live rate data. Investment guidance unavailable.")
     else:
-    current_spread = round(actual_mortgage_rate - actual_10Y_yield, 2)
+        current_spread = round(actual_mortgage_rate - actual_10Y_yield, 2)
 
     st.subheader("📌 Investment Guidance")
 

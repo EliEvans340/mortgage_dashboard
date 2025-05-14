@@ -20,13 +20,13 @@ def get_30yr_mortgage_rate():
         return float(rate_text)
     except Exception as e:
         print(f"Error fetching mortgage rate: {e}")
-        return None, None
+        return None
 
 def get_live_rates():
     try:
         # 10-Year Treasury Yield (Yahoo: ^TNX is in basis points, divide by 100)
         tnx = yf.Ticker("^TNX")
-        treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]
+        treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]/100
 
         mortgage_rate = get_30yr_mortgage_rate()
         

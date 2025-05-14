@@ -14,6 +14,21 @@ def get_30yr_mortgage_rate():
         page = requests.get(url, headers=headers)
         soup = BeautifulSoup(page.content, "html.parser")
 
+        # DEBUG: Try printing out part of the HTML
+        # st.code(soup.prettify()[0:1000])  # Optional debug output
+
+        label = soup.find("span", string="30-year fixed")
+        if not label:
+            raise ValueError("Could not find label '30-year fixed'")
+        
+        rate_span = label.find_next("span")
+        rate_text = rate_span.text.strip().replace("%", "")
+        return float(rate_text)
+
+    except Exception as e:
+        print(f"Error fetching mortgage rate: {e}")
+        return None
+
         # Find the element (you may need to update this selector over time)
         rate_span = soup.find("span", string="30-year fixed").find_next("span")
         rate_text = rate_span.text.strip().replace("%", "")
@@ -26,6 +41,12 @@ def get_live_rates():
     try:
         # 10-Year Treasury Yield (Yahoo: ^TNX is in basis points, divide by 100)
         tnx = yf.Ticker("^TNX")
+        hist = tnx.history(period="1d")
+        
+        if hist.empty or "Close" not in hist:
+            st.warning("⚠️ No data returned for ^TNX from Yahoo Finance.")
+            return None, None
+            
         treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]/100
 
         mortgage_rate = get_30yr_mortgage_rate()

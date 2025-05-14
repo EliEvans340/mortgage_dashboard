@@ -10,7 +10,6 @@ import yfinance as yf
 def get_30yr_mortgage_rate():
     url = "https://www.nerdwallet.com/mortgages/mortgage-rates"
     headers = {"User-Agent": "Mozilla/5.0"}
-
     try:
         page = requests.get(url, headers=headers)
         soup = BeautifulSoup(page.content, "html.parser")
@@ -30,13 +29,12 @@ def get_live_rates():
         treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]
 
         mortgage_rate = get_30yr_mortgage_rate()
-
+        
+        return round(treasury_yield, 2), mortgage_rate
+    
     except Exception as e:
         st.warning(f"⚠️ Error fetching live data: {e}")
         return None, None
-
-        return round(treasury_yield, 2), mortgage_rate
-
 
 # Load the data
 @st.cache_data

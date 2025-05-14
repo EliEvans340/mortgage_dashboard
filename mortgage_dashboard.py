@@ -3,15 +3,14 @@ import plotly.express as px
 import streamlit as st
 import requests
 from bs4 import BeautifulSoup
-from fredapi import Fred
 import os
+from fredapi import Fred
 
 import yfinance as yf
 
 @st.cache_data(ttl=3600)  # Refresh every hour
 # Add your FRED API key (free at https://fred.stlouisfed.org/)
-os.environ["FRED_API_KEY"] = "e77ffd5020e10fd3410f3b13d83b5b68"
-fred = Fred()
+fred = Fred(api_key="e77ffd5020e10fd3410f3b13d83b5b68")
 
 def get_30yr_mortgage_rate():
     try:

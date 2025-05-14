@@ -47,7 +47,7 @@ def get_live_rates():
             st.warning("⚠️ No data returned for ^TNX from Yahoo Finance.")
             return None, None
             
-        treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]/100
+        treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]
 
         mortgage_rate = get_30yr_mortgage_rate()
         

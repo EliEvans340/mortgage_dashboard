@@ -22,10 +22,6 @@ def get_30yr_mortgage_rate():
     except Exception as e:
         print(f"Error fetching mortgage rate: {e}")
         return None, None
-        
-        # 30-Year Mortgage Rate — placeholder / static fallback
-        # Replace with an actual API or static scrape later
-        #mortgage_rate = 6.92  # You can update this manually or automate with another source
 
 def get_live_rates():
     try:

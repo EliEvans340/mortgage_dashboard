@@ -251,3 +251,16 @@ def get_bls_county_unemployment():
     latest_data = df[df['Date'] == latest_month].copy()
 
     return df, latest_data
+
+# Pull both full and latest unemployment data
+full_bls_data, latest_bls_data = get_bls_county_unemployment()
+
+st.subheader("📍 Latest County-Level Unemployment Rates (BLS)")
+st.dataframe(latest_bls_data[['County', 'Year', 'Month', 'Unemployment Rate']])
+
+# Optional trend chart
+if st.checkbox("📊 Show Monthly Unemployment Trends"):
+    fig = px.line(full_bls_data.sort_values("Date"),
+                  x="Date", y="Unemployment Rate", color="County",
+                  title="Unemployment Trends by County (BLS Data)")
+    st.plotly_chart(fig)

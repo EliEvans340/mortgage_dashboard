@@ -8,33 +8,21 @@ import yfinance as yf
 
 @st.cache_data(ttl=3600)  # Refresh every hour
 def get_30yr_mortgage_rate():
-    url = "https://www.nerdwallet.com/mortgages/mortgage-rates"
+    url = "https://www.mortgagenewsdaily.com/mortgage-rates/30-year-fixed"
     headers = {"User-Agent": "Mozilla/5.0"}
     try:
-        page = requests.get(url, headers=headers)
+        page = requests.get(url, headers=headers, timeout=10)
         soup = BeautifulSoup(page.content, "html.parser")
 
-        # DEBUG: Try printing out part of the HTML
-        # st.code(soup.prettify()[0:1000])  # Optional debug output
+        rate_div = soup.find("div", class_="value")
+        if not rate_div:
+            st.warning("⚠️ Could not find mortgage rate div on Mortgage News Daily")
+            return None
 
-        label = soup.find("span", string="30-year fixed")
-        if not label:
-            raise ValueError("Could not find label '30-year fixed'")
-        
-        rate_span = label.find_next("span")
-        rate_text = rate_span.text.strip().replace("%", "")
-        return float(rate_text)
-
-    except Exception as e:
-        print(f"Error fetching mortgage rate: {e}")
-        return None
-
-        # Find the element (you may need to update this selector over time)
-        rate_span = soup.find("span", string="30-year fixed").find_next("span")
-        rate_text = rate_span.text.strip().replace("%", "")
+        rate_text = rate_div.text.strip().replace("%", "")
         return float(rate_text)
     except Exception as e:
-        print(f"Error fetching mortgage rate: {e}")
+        st.warning(f"⚠️ Error fetching mortgage rate from MND: {e}")
         return None
 
 def get_live_rates():

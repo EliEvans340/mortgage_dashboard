@@ -10,6 +10,11 @@ import yfinance as yf
 # Add your FRED API key (free at https://fred.stlouisfed.org/)
 fred = Fred(api_key="e77ffd5020e10fd3410f3b13d83b5b68")
 
+# Replace with your actual API key from https://api.census.gov/data/key_signup.html
+CENSUS_API_KEY = 'e88c1f7dde0475245ac483559fa83aad443967f6'
+CENSUS_base_url = 'https://api.census.gov/data/2021/acs/acs5'
+
+
 @st.cache_data(ttl=3600)  # Refresh every hour
 
 
@@ -170,4 +175,79 @@ try:
 except Exception as e:
     st.warning("⚠️ Could not generate investment guidance.")
     st.caption(str(e))
-    
+
+#US Census API Call
+@st.cache_data(ttl=86400)
+def get_city_labor_data():
+    params = {
+        'get': 'NAME,B01003_001E,B23025_005E',
+        'for': 'place:*',
+        'in': 'state:36',
+        'key': CENSUS_API_KEY
+    }
+    response = requests.get(CENSUS_base_url, params=params)
+    data = response.json()
+    df = pd.DataFrame(data[1:], columns=data[0])
+    df['B01003_001E'] = pd.to_numeric(df['B01003_001E'], errors='coerce')
+    df['B23025_005E'] = pd.to_numeric(df['B23025_005E'], errors='coerce')
+    target_places = [
+        "Oyster Bay", "Hempstead", "North Hempstead", "Islip",
+        "Queens", "Brooklyn", "Staten Island"
+    ]
+    df_filtered = df[df['NAME'].str.lower().str.contains('|'.join([name.lower() for name in target_places]))].copy()
+    df_filtered.rename(columns={
+        'NAME': 'Place',
+        'B01003_001E': 'Total_Population',
+        'B23025_005E': 'Unemployed'
+    }, inplace=True)
+    df_filtered['Unemployment_Rate_%'] = (
+        df_filtered['Unemployed'] / df_filtered['Total_Population'] * 100
+    ).round(2)
+    return df_filtered.reset_index(drop=True)
+
+#BLS API Call
+@st.cache_data(ttl=86400)
+def get_bls_county_unemployment():
+    BLS_API_KEY = "a8113b3e5ce94f11917a83b94e35e702"  # 🔐 Replace with your BLS key
+
+    # BLS Series IDs (Not Seasonally Adjusted, County-Level Unemployment Rates)
+    series_ids = {
+        "Nassau County": "LAUCN360590000000003",
+        "Suffolk County": "LAUCN361030000000003",
+        "Queens County": "LAUCN360810000000003",
+        "Kings County (Brooklyn)": "LAUCN360470000000003",
+        "Richmond County (Staten Island)": "LAUCN360850000000003"
+    }
+
+    headers = {'Content-type': 'application/json'}
+    data = {
+        "seriesid": list(series_ids.values()),
+        "startyear": "2024",
+        "endyear": "2025",
+        "registrationkey": BLS_API_KEY
+    }
+
+    response = requests.post("https://api.bls.gov/publicAPI/v2/timeseries/data/", json=data, headers=headers)
+    results = response.json()
+
+    # Extract and structure the data
+    records = []
+    for i, series in enumerate(results['Results']['series']):
+        county = list(series_ids.keys())[i]
+        for item in series['data']:
+            if item['period'].startswith("M"):  # Filter out annual averages
+                records.append({
+                    "County": county,
+                    "Year": item['year'],
+                    "Month": item['periodName'],
+                    "Unemployment Rate": float(item['value'])
+                })
+
+    df = pd.DataFrame(records)
+    df['Date'] = pd.to_datetime(df['Month'] + " " + df['Year'], format="%B %Y")
+
+    # Keep only the latest available month per county
+    latest_month = df['Date'].max()
+    latest_data = df[df['Date'] == latest_month].copy()
+
+    return df, latest_data

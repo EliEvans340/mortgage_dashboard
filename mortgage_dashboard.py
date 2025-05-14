@@ -39,24 +39,29 @@ def get_30yr_mortgage_rate():
 
 def get_live_rates():
     try:
-        # 10-Year Treasury Yield (Yahoo: ^TNX is in basis points, divide by 100)
         tnx = yf.Ticker("^TNX")
         hist = tnx.history(period="1d")
-        
+
         if hist.empty or "Close" not in hist:
-            st.warning("⚠️ No data returned for ^TNX from Yahoo Finance.")
+            st.warning("⚠️ Yahoo Finance returned no data for ^TNX.")
             return None, None
-            
-        treasury_yield = tnx.history(period="1d")["Close"].iloc[-1]
 
-        mortgage_rate = get_30yr_mortgage_rate()
-        
-        return round(treasury_yield, 2), mortgage_rate
-    
+        treasury_yield = hist["Close"].iloc[-1] / 100
+
     except Exception as e:
-        st.warning(f"⚠️ Error fetching live data: {e}")
-        return None, None
+        st.warning(f"⚠️ Error fetching 10Y Treasury yield: {e}")
+        treasury_yield = None
 
+    try:
+        mortgage_rate = get_30yr_mortgage_rate()
+        if mortgage_rate is None:
+            st.warning("⚠️ NerdWallet scrape failed to return a mortgage rate.")
+    except Exception as e:
+        st.warning(f"⚠️ Error fetching mortgage rate: {e}")
+        mortgage_rate = None
+
+    return treasury_yield, mortgage_rate
+    
 # Load the data
 @st.cache_data
 def load_data():
@@ -137,6 +142,7 @@ try:
 
     # Real-world current rates (can later pull dynamically)
     actual_10Y_yield, actual_mortgage_rate = get_live_rates()
+    st.write(f"DEBUG - 10Y Yield: {actual_10Y_yield}, Mortgage Rate: {actual_mortgage_rate}")
     # Detailed debugging
     if actual_10Y_yield is None:
         st.error("⚠️ Failed to retrieve the 10-Year Treasury Yield from Yahoo Finance.")

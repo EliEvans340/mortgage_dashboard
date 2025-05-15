@@ -187,24 +187,44 @@ def get_city_labor_data():
         'in': 'state:36',
         'key': CENSUS_API_KEY
     }
+
     response = requests.get(CENSUS_base_url, params=params)
-    data = response.json()
+
+    # 🛑 Stop and show error if request failed
+    if response.status_code != 200:
+        st.error(f"❌ Census API error: {response.status_code}")
+        st.text(response.text[:1000])
+        st.stop()
+
+    # 🧪 Try to parse JSON or print the raw response
+    try:
+        data = response.json()
+    except Exception as e:
+        st.error("❌ Failed to parse Census response as JSON.")
+        st.text(response.text[:1000])
+        st.stop()
+
+    # ✅ Normal logic continues
     df = pd.DataFrame(data[1:], columns=data[0])
     df['B01003_001E'] = pd.to_numeric(df['B01003_001E'], errors='coerce')
     df['B23025_005E'] = pd.to_numeric(df['B23025_005E'], errors='coerce')
+
     target_places = [
         "Oyster Bay", "Hempstead", "North Hempstead", "Islip",
         "Queens", "Brooklyn", "Staten Island"
     ]
     df_filtered = df[df['NAME'].str.lower().str.contains('|'.join([name.lower() for name in target_places]))].copy()
+
     df_filtered.rename(columns={
         'NAME': 'Place',
         'B01003_001E': 'Total_Population',
         'B23025_005E': 'Unemployed'
     }, inplace=True)
+
     df_filtered['Unemployment_Rate_%'] = (
         df_filtered['Unemployed'] / df_filtered['Total_Population'] * 100
     ).round(2)
+
     return df_filtered.reset_index(drop=True)
 
 #BLS API Call

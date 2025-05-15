@@ -11,7 +11,7 @@ import yfinance as yf
 fred = Fred(api_key="e77ffd5020e10fd3410f3b13d83b5b68")
 
 # Replace with your actual API key from https://api.census.gov/data/key_signup.html
-CENSUS_API_KEY = 'e88c1f7dde0475245ac483559fa83aad443967f6'
+CENSUS_API_KEY = "e88c1f7dde0475245ac483559fa83aad443967f6"
 CENSUS_base_url = 'https://api.census.gov/data/2021/acs/acs5'
 
 
@@ -179,7 +179,7 @@ except Exception as e:
 #US Census API Call
 @st.cache_data(ttl=86400)
 def get_city_labor_data():
-    CENSUS_API_KEY = 'e88c1f7dde0475245ac483559fa83aad443967f6'
+    CENSUS_API_KEY = "e88c1f7dde0475245ac483559fa83aad443967f6"
     CENSUS_base_url = 'https://api.census.gov/data/2021/acs/acs5'
     params = {
         'get': 'NAME,B01003_001E,B23025_005E',

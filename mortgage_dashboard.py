@@ -272,3 +272,19 @@ if st.checkbox("📊 Show Monthly Unemployment Trends"):
                   x="Date", y="Unemployment Rate", color="County",
                   title="Unemployment Trends by County (BLS Data)")
     st.plotly_chart(fig)
+
+#US Census Table
+st.header("🏙️ City/Town-Level Labor Market Data (Census)")
+
+city_data = get_city_labor_data()
+
+selected_place = st.selectbox("Select a Town or Borough", city_data['Place'])
+
+selected_row = city_data[city_data['Place'] == selected_place].iloc[0]
+
+st.metric("Total Population", f"{int(selected_row['Total_Population']):,}")
+st.metric("Unemployed", f"{int(selected_row['Unemployed']):,}")
+st.metric("Unemployment Rate", f"{selected_row['Unemployment_Rate_%']}%")
+
+if st.checkbox("📄 Show full Census labor table"):
+    st.dataframe(city_data)

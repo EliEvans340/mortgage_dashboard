@@ -35,7 +35,7 @@ def get_live_rates():
             st.warning("⚠️ Yahoo Finance returned no data for ^TNX.")
             return None, None
 
-        treasury_yield = hist["Close"].iloc[-1] / 100
+        treasury_yield = hist["Close"].iloc[-1] 
 
     except Exception as e:
         st.warning(f"⚠️ Error fetching 10Y Treasury yield: {e}")
